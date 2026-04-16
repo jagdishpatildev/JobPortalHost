@@ -1,0 +1,8 @@
+<h1>Jobs</h1>
+
+{% for job in jobs %}
+  <div>
+    <h3>{{ job.title }}</h3>
+    <p>{{ job.company }} - {{ job.location }}</p>
+  </div>
+{% endfor %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Chat - HireHub{% endblock %}
+
+{% block content %}
+<div class="container my-4" style="max-width:750px;">
+    <div class="card border-0 shadow">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+            <i class="fas fa-comments me-2"></i>
+            <strong>Chat — {{ room.application.job.title }}</strong>
+            <small class="ms-auto opacity-75">
+                {{ room.application.applicant.username }} &amp; {{ room.application.job.employer.username }}
+            </small>
+        </div>
+
+        <!-- Messages -->
+        <div class="card-body p-3" id="chat-log"
+             style="height:420px;overflow-y:auto;background:#f8f9fa;">
+            {% for msg in chat_messages %}
+            <div class="d-flex {% if msg.sender == request.user %}justify-content-end{% endif %} mb-2">
+                <div class="px-3 py-2 rounded-3 shadow-sm"
+                     style="max-width:70%;
+                            background:{% if msg.sender == request.user %}#0d6efd{% else %}#fff{% endif %};
+                            color:{% if msg.sender == request.user %}#fff{% else %}#212529{% endif %};">
+                    {% if msg.sender != request.user %}
+                    <small class="fw-bold d-block mb-1" style="font-size:0.75rem;">
+                        {{ msg.sender.username }}
+                    </small>
+                    {% endif %}
+                    {{ msg.message }}
+                    <small class="d-block mt-1 opacity-75" style="font-size:0.7rem;text-align:right;">
+                        {{ msg.timestamp|date:"H:i" }}
+                    </small>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted text-center mt-5">No messages yet. Say hello! 👋</p>
+            {% endfor %}
+        </div>
+
+        <!-- Input -->
+        <div class="card-footer p-3">
+            <div class="input-group">
+                <input id="chat-input" type="text" class="form-control form-control-lg"
+                       placeholder="Type a message..." autocomplete="off">
+                <button id="chat-send" class="btn btn-primary px-4">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const roomId   = {{ room_id }};
+const username = "{{ request.user.username }}";
+const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+const socket   = new WebSocket(`${wsScheme}://${window.location.host}/ws/chat/${roomId}/`);
+
+const log   = document.getElementById("chat-log");
+const input = document.getElementById("chat-input");
+const btn   = document.getElementById("chat-send");
+
+// Scroll to bottom
+log.scrollTop = log.scrollHeight;
+
+socket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    const isMine = data.sender === username;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = `d-flex ${isMine ? "justify-content-end" : ""} mb-2`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "px-3 py-2 rounded-3 shadow-sm";
+    bubble.style.cssText = `max-width:70%;background:${isMine?"#0d6efd":"#fff"};color:${isMine?"#fff":"#212529"}`;
+
+    if (!isMine) {
+        const name = document.createElement("small");
+        name.className = "fw-bold d-block mb-1";
+        name.style.fontSize = "0.75rem";
+        name.textContent = data.sender;
+        bubble.appendChild(name);
+    }
+
+    const text = document.createElement("span");
+    text.textContent = data.message;
+    bubble.appendChild(text);
+
+    const time = document.createElement("small");
+    time.className = "d-block mt-1 opacity-75";
+    time.style.cssText = "font-size:0.7rem;text-align:right;";
+    time.textContent = data.timestamp;
+    bubble.appendChild(time);
+
+    wrapper.appendChild(bubble);
+    log.appendChild(wrapper);
+    log.scrollTop = log.scrollHeight;
+};
+
+function sendMsg() {
+    const msg = input.value.trim();
+    if (!msg) return;
+    socket.send(JSON.stringify({message: msg}));
+    input.value = "";
+}
+
+btn.onclick = sendMsg;
+input.addEventListener("keydown", e => { if (e.key === "Enter") sendMsg(); });
+
+socket.onclose = function() {
+    const div = document.createElement("div");
+    div.className = "text-center text-danger small my-2";
+    div.textContent = "⚠️ Connection closed. Please refresh.";
+    log.appendChild(div);
+};
+</script>
+{% endblock %}

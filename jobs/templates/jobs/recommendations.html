@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Job Recommendations - HireHub{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h3 class="fw-bold mb-2">
+        <i class="fas fa-magic me-2 text-primary"></i>Jobs Recommended For You
+    </h3>
+    {% if reason %}
+    <p class="text-muted mb-4">
+        <i class="fas fa-info-circle me-1"></i>{{ reason }}
+    </p>
+    {% endif %}
+
+    {% if recommended %}
+        {% for job in recommended %}
+        <div class="card job-card mb-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1">
+                            <a href="{% url 'job_detail' job.pk %}" class="text-decoration-none text-dark">
+                                {{ job.title }}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-building me-1"></i>{{ job.company }}
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ job.location }}
+                        </p>
+                        <span class="badge bg-primary me-1">{{ job.get_job_type_display }}</span>
+                        {% if job.category %}<span class="badge bg-secondary">{{ job.category.name }}</span>{% endif %}
+                    </div>
+                    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                        <a href="{% url 'job_detail' job.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View & Apply
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No recommendations yet.</h5>
+            <a href="{% url 'resume_builder' %}" class="btn btn-primary mt-2">
+                <i class="fas fa-hammer me-1"></i>Build Your Resume to Get Recommendations
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

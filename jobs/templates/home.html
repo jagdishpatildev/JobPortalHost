@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Find Jobs — HireHub{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<div class="hero">
+  <div class="container position-relative">
+    <div class="text-center mb-5">
+      <span class="badge mb-3 px-3 py-2" style="background:rgba(59,130,246,.2);color:#93C5FD;font-size:.8rem">
+        🚀 {{ jobs.paginator.count }} open positions right now
+      </span>
+      <h1>Find Your Dream Job<br><span style="color:var(--blue)">In Minutes</span></h1>
+      <p class="lead mt-3">Search thousands of jobs from top companies across India</p>
+    </div>
+
+    <!-- Search box -->
+    <div class="search-box mx-auto" style="max-width:860px">
+      <form method="GET" action="{% url 'home' %}">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-4">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-search ms-2 me-2" style="color:var(--muted)"></i>
+              <input type="text" name="keyword" class="form-control border-0 shadow-none"
+                     placeholder="Job title or keyword" value="{{ keyword }}">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="d-flex align-items-center border-start">
+              <i class="fas fa-map-marker-alt ms-3 me-2" style="color:var(--muted)"></i>
+              <input type="text" name="location" class="form-control border-0 shadow-none"
+                     placeholder="Location" value="{{ location }}">
+            </div>
+          </div>
+          <div class="col-md-2 border-start">
+            <select name="category" class="form-select border-0 shadow-none">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2 border-start">
+            <select name="job_type" class="form-select border-0 shadow-none">
+              <option value="">All Types</option>
+              <option value="full_time">Full Time</option>
+              <option value="part_time">Part Time</option>
+              <option value="remote">Remote</option>
+              <option value="contract">Contract</option>
+              <option value="internship">Internship</option>
+            </select>
+          </div>
+          <div class="col-md-1">
+            <button type="submit" class="btn btn-search w-100 py-2">
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Jobs Section -->
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="section-title mb-0">
+        {% if keyword or location %}Search Results{% else %}Latest Opportunities{% endif %}
+      </h4>
+      <small class="text-muted">{{ jobs.paginator.count }} job{{ jobs.paginator.count|pluralize }} found</small>
+    </div>
+    {% if user.is_authenticated and user.is_employer %}
+    <a href="{% url 'post_job' %}" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>Post a Job
+    </a>
+    {% endif %}
+  </div>
+
+  {% if jobs %}
+    {% for job in jobs %}
+    <div class="job-card mb-3">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <a href="{% url 'job_detail' job.pk %}" class="job-title d-block mb-1 text-decoration-none">
+            {{ job.title }}
+          </a>
+          <p class="company-info mb-2">
+            <i class="fas fa-building"></i> {{ job.company }}
+            <span class="mx-2">·</span>
+            <i class="fas fa-map-marker-alt"></i> {{ job.location }}
+            {% if job.salary %}
+            <span class="mx-2">·</span>
+            <i class="fas fa-rupee-sign"></i> {{ job.salary }}
+            {% endif %}
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge badge-job-type">{{ job.get_job_type_display }}</span>
+            {% if job.category %}<span class="badge" style="background:#F1F5F9;color:var(--navy-60)">{{ job.category.name }}</span>{% endif %}
+            {% if job.job_type == 'remote' %}<span class="badge badge-remote">Remote</span>{% endif %}
+          </div>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+          <small class="text-muted d-block mb-2">
+            <i class="fas fa-clock me-1"></i>{{ job.created_at|timesince }} ago
+          </small>
+          <div class="d-flex gap-2 justify-content-md-end">
+            {% if user.is_authenticated and user.is_seeker %}
+            <a href="{% url 'toggle_save_job' job.pk %}"
+               class="btn btn-sm {% if job.pk in saved_ids %}btn-warning{% else %}btn-outline-secondary{% endif %}"
+               title="{% if job.pk in saved_ids %}Unsave{% else %}Save{% endif %}">
+              <i class="fas fa-bookmark"></i>
+            </a>
+            {% endif %}
+            <a href="{% url 'job_detail' job.pk %}" class="btn btn-sm btn-outline-primary">
+              View Details <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if jobs.has_other_pages %}
+    <nav class="mt-5 d-flex justify-content-center">
+      <ul class="pagination gap-1">
+        {% if jobs.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ jobs.previous_page_number }}&keyword={{ keyword }}&location={{ location }}">
+            <i class="fas fa-chevron-left"></i>
+          </a>
+        </li>
+        {% endif %}
+       {% for num in jobs.paginator.page_range %}
+  {% if num >= jobs.number|add:'-2' and num <= jobs.number|add:'2' %}
+    <li class="page-item {% if jobs.number == num %}active{% endif %}">
+      <a class="page-link" href="?page={{ num }}&keyword={{ keyword }}&location={{ location }}">{{ num }}</a>
+    </li>
+  {% endif %}
+{% endfor %}
+        {% if jobs.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ jobs.next_page_number }}&keyword={{ keyword }}&location={{ location }}">
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+  {% else %}
+    <div class="empty-state">
+      <i class="fas fa-search-minus d-block"></i>
+      <h5>No jobs found</h5>
+      <p>Try different keywords or remove some filters</p>
+      <a href="{% url 'home' %}" class="btn btn-outline-primary mt-2">Clear Filters</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

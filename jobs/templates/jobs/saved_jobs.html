@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Saved Jobs - HireHub{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h3 class="fw-bold mb-4">
+        <i class="fas fa-bookmark me-2 text-warning"></i>Saved Jobs
+    </h3>
+
+    {% if saves %}
+    <div class="row g-3">
+        {% for save in saves %}
+        <div class="col-12">
+            <div class="card job-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-7">
+                            <h5 class="mb-1">
+                                <a href="{% url 'job_detail' save.job.pk %}" class="text-decoration-none text-dark">
+                                    {{ save.job.title }}
+                                </a>
+                            </h5>
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-building me-1"></i>{{ save.job.company }}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ save.job.location }}
+                                {% if save.job.salary %}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-rupee-sign me-1"></i>{{ save.job.salary }}
+                                {% endif %}
+                            </p>
+                            <span class="badge bg-primary me-1">{{ save.job.get_job_type_display }}</span>
+                            <span class="badge bg-{{ save.job.status|yesno:'success,danger' }}">
+                                {{ save.job.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="col-md-5 text-md-end mt-2 mt-md-0 d-flex gap-2 justify-content-md-end">
+                            <a href="{% url 'job_detail' save.job.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                            <a href="{% url 'toggle_save_job' save.job.pk %}" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-bookmark-slash me-1"></i>Remove
+                            </a>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>Saved {{ save.saved_at|timesince }} ago
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-bookmark fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No saved jobs yet.</h5>
+        <a href="{% url 'home' %}" class="btn btn-primary mt-2">
+            <i class="fas fa-search me-1"></i>Browse Jobs
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

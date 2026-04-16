@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — HireHub{% endblock %}
+{% block content %}
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="section-title mb-0">My Job Listings</h3>
+      <small class="text-muted">{{ jobs|length }} job{{ jobs|length|pluralize }} posted</small>
+    </div>
+    <a href="{% url 'post_job' %}" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>Post New Job
+    </a>
+  </div>
+
+  {% if jobs %}
+  {% for job in jobs %}
+  <div class="card mb-3">
+    <div class="card-body p-4">
+      <div class="row align-items-center">
+        <div class="col-md-5">
+          <h5 class="fw-bold mb-1">{{ job.title }}</h5>
+          <small class="text-muted">
+            <i class="fas fa-map-marker-alt me-1"></i>{{ job.location }}
+            <span class="mx-2">·</span>
+            <span class="badge {% if job.status == 'open' %}badge-remote{% else %}status-rejected{% endif %} ms-1">
+              {{ job.get_status_display }}
+            </span>
+          </small>
+        </div>
+        <div class="col-md-3 text-center py-3 py-md-0">
+          <div class="stat-card d-inline-flex flex-column align-items-center px-4 py-2" style="background:var(--blue);border-radius:12px">
+            <span class="stat-number" style="font-size:1.8rem">{{ job.app_count }}</span>
+            <span class="stat-label">Applicants</span>
+          </div>
+        </div>
+        <div class="col-md-4 text-md-end d-flex gap-2 justify-content-md-end">
+          <a href="{% url 'edit_job' job.pk %}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-edit me-1"></i>Edit
+          </a>
+          <form method="POST" action="{% url 'delete_job' job.pk %}" class="d-inline"
+                onsubmit="return confirm('Delete this job posting?')">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash me-1"></i>Delete</button>
+          </form>
+        </div>
+      </div>
+
+      {% if job.applications.all %}
+      <hr class="my-3">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Applicant</th>
+              <th>Applied</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in job.applications.all %}
+            <tr>
+              <td class="fw-semibold">{{ app.applicant.get_full_name|default:app.applicant.username }}</td>
+              <td class="text-muted">{{ app.applied_at|date:"d M Y" }}</td>
+              <td>
+                <span class="badge status-{{ app.status }}">{{ app.get_status_display }}</span>
+              </td>
+              <td>
+                <form method="POST" action="{% url 'update_status' app.pk %}" class="d-flex gap-2">
+                  {% csrf_token %}
+                  <select name="status" class="form-select form-select-sm" style="width:130px">
+                    {% for val, label in app.STATUS_CHOICES %}
+                    <option value="{{ val }}" {% if app.status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                  {% if app.job.chat_room %}
+                  <a href="{% url 'chat_room' app.job.chat_room.id %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-comments"></i>
+                  </a>
+                  {% else %}
+                  <a href="{% url 'start_chat' app.pk %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-comments"></i>
+                  </a>
+                  {% endif %}
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state card border-0 shadow-sm p-5">
+    <i class="fas fa-briefcase d-block"></i>
+    <h5>No jobs posted yet</h5>
+    <p>Start hiring by posting your first job listing</p>
+    <a href="{% url 'post_job' %}" class="btn btn-primary mt-2">Post Your First Job</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

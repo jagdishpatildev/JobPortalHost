@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Resume Builder{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <!-- Form -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="fw-bold mb-4">
+                        <i class="fas fa-file-alt me-2 text-primary"></i>Resume Builder
+                    </h3>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Full Name</label>
+                            <input type="text" name="full_name" class="form-control"
+                                   value="{{ resume.full_name }}" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" name="email" class="form-control"
+                                       value="{{ resume.email }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Phone</label>
+                                <input type="text" name="phone" class="form-control"
+                                       value="{{ resume.phone }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Location</label>
+                            <input type="text" name="location" class="form-control"
+                                   value="{{ resume.location }}" placeholder="City, State">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Professional Summary</label>
+                            <textarea name="summary" class="form-control" rows="3">{{ resume.summary }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Skills (comma separated)</label>
+                            <input type="text" name="skills" class="form-control"
+                                   value="{{ resume.skills }}" placeholder="Python, Django, SQL...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Experience (JSON)</label>
+                            <textarea name="experience" class="form-control" rows="5">{{ resume.experience }}</textarea>
+                            <small class="text-muted">
+                                Format: [{"company":"X","role":"Y","duration":"Z","description":"..."}]
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Education (JSON)</label>
+                            <textarea name="education" class="form-control" rows="3">{{ resume.education }}</textarea>
+                            <small class="text-muted">
+                                Format: [{"institution":"X","degree":"Y","year":"Z"}]
+                            </small>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">LinkedIn URL</label>
+                                <input type="url" name="linkedin" class="form-control"
+                                       value="{{ resume.linkedin }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">GitHub URL</label>
+                                <input type="url" name="github" class="form-control"
+                                       value="{{ resume.github }}">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Resume
+                            </button>
+                            <a href="{% url 'export_resume_pdf' %}" class="btn btn-success">
+                                <i class="fas fa-file-pdf me-1"></i>Download PDF
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm" style="position:sticky;top:80px">
+                <div class="card-body p-4" id="resume-preview">
+                    <h2 class="fw-bold text-primary" id="prev-name">{{ resume.full_name }}</h2>
+                    <p class="text-muted mb-1" id="prev-contact">
+                        {{ resume.email }}{% if resume.phone %} | {{ resume.phone }}{% endif %}
+                        {% if resume.location %} | {{ resume.location }}{% endif %}
+                    </p>
+                    <hr class="border-primary border-2">
+                    {% if resume.summary %}
+                    <h6 class="fw-bold text-primary">PROFESSIONAL SUMMARY</h6>
+                    <p id="prev-summary">{{ resume.summary }}</p>
+                    {% endif %}
+                    {% if resume.skills %}
+                    <h6 class="fw-bold text-primary">SKILLS</h6>
+                    <p>{% for skill in resume.get_skills_list %}
+                        <span class="badge bg-primary me-1">{{ skill }}</span>
+                    {% endfor %}</p>
+                    {% endif %}
+                    {% if resume.experience %}
+                    <h6 class="fw-bold text-primary">EXPERIENCE</h6>
+                    {% endif %}
+                    {% if resume.education %}
+                    <h6 class="fw-bold text-primary">EDUCATION</h6>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
